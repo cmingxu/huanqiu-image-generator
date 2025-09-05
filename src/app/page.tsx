@@ -1,103 +1,196 @@
-import Image from "next/image";
+'use client';
+
+import { useState, useEffect, useCallback } from 'react';
+import CanvasEditor from '../components/CanvasEditor';
+import AssetPanel from '../components/AssetPanel';
+import TextControls from '../components/TextControls';
+
+export interface TextStyle {
+  fontFamily: string;
+  fontSize: number;
+  fontWeight: string;
+  color: string;
+  backgroundColor: string;
+  textShadow: string;
+  border: string;
+  borderRadius: number;
+  borderWidth: number;
+  borderStyle: string;
+  padding: number;
+  scaleX: number;
+  scaleY: number;
+  skewX: number;
+  skewY: number;
+}
+
+export interface OverlaySettings {
+  opacity: number;
+  color: string;
+}
+
+export interface TextPosition {
+  x: number;
+  y: number;
+}
 
 export default function Home() {
-  return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [textContent, setTextContent] = useState('8 月 3 日入园人数: <span style="color: #ff0000; font-weight: bold;">19999</span><br/>天气晴朗适合游玩');
+  const [textStyle, setTextStyle] = useState<TextStyle>({
+    fontFamily: 'Comic Sans MS',
+    fontSize: 45,
+    fontWeight: 'black',
+    color: '#0e0d0c',
+    backgroundColor: '#f4f750',
+    textShadow: '2px 2px 4px #000000',
+    border: '1px solid #000000',
+    borderRadius: 0,
+    borderWidth: 1,
+    borderStyle: 'solid',
+    padding: 35,
+    scaleX: 1,
+    scaleY: 1,
+    skewX: -15,
+    skewY: 0,
+  });
+  const [overlaySettings, setOverlaySettings] = useState<OverlaySettings>({
+    opacity: 0.7,
+    color: '#443c3c',
+  });
+  const [textPosition, setTextPosition] = useState<TextPosition>({ x: 50, y: 50 });
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  // const searchParams = useSearchParams(); // Currently unused
+
+  // Function to parse URL parameters and update state
+  const parseUrlParams = useCallback(() => {
+    const params = new URLSearchParams(window.location.search);
+    let hasParams = false;
+
+    // Parse selected image
+    const image = params.get('image');
+    if (image) {
+      setSelectedImage(decodeURIComponent(image));
+      hasParams = true;
+    }
+
+    // Parse text content
+    const text = params.get('text');
+    if (text) {
+      setTextContent(decodeURIComponent(text));
+      hasParams = true;
+    }
+
+    // Parse text style parameters
+    const newTextStyle = { ...textStyle };
+    const textStyleParams = [
+      'fontFamily', 'fontSize', 'fontWeight', 'color', 'backgroundColor',
+      'textShadow', 'border', 'borderRadius', 'borderWidth', 'borderStyle',
+      'padding', 'scaleX', 'scaleY', 'skewX', 'skewY'
+    ];
+
+    textStyleParams.forEach(param => {
+      const value = params.get(param);
+      if (value !== null) {
+        if (param === 'fontSize' || param === 'borderRadius' || param === 'borderWidth' || param === 'padding') {
+          (newTextStyle as Record<string, unknown>)[param] = parseInt(value);
+        } else if (param === 'scaleX' || param === 'scaleY' || param === 'skewX' || param === 'skewY') {
+          (newTextStyle as Record<string, unknown>)[param] = parseFloat(value);
+        } else {
+          (newTextStyle as Record<string, unknown>)[param] = decodeURIComponent(value);
+        }
+        hasParams = true;
+      }
+    });
+
+    if (hasParams) {
+      setTextStyle(newTextStyle);
+    }
+
+    // Parse overlay settings
+    const newOverlaySettings = { ...overlaySettings };
+    const opacity = params.get('opacity');
+    const overlayColor = params.get('overlayColor');
+    
+    if (opacity !== null) {
+      newOverlaySettings.opacity = parseFloat(opacity);
+      hasParams = true;
+    }
+    if (overlayColor !== null) {
+      newOverlaySettings.color = decodeURIComponent(overlayColor);
+      hasParams = true;
+    }
+    
+    if (opacity !== null || overlayColor !== null) {
+      setOverlaySettings(newOverlaySettings);
+    }
+
+    // Parse text position
+    const x = params.get('x');
+    const y = params.get('y');
+    if (x !== null || y !== null) {
+      setTextPosition({
+        x: x !== null ? parseInt(x) : textPosition.x,
+        y: y !== null ? parseInt(y) : textPosition.y
+      });
+      hasParams = true;
+    }
+
+    return hasParams;
+  }, [textStyle, overlaySettings, textPosition]);
+
+
+  // Effect to parse URL parameters on component mount
+  useEffect(() => {
+    parseUrlParams();
+  }, [parseUrlParams]);
+
+
+  return (
+    <div className="min-h-screen bg-gray-50 flex">
+      {/* Left Section - Canvas */}
+      <div className="flex-1 p-6">
+        <div className="bg-white rounded-lg shadow-lg p-6 h-full">
+          <div className="flex justify-between items-center mb-4">
+            <h1 className="text-2xl font-bold text-gray-800">Image Editor</h1>
+          </div>
+          <CanvasEditor
+            selectedImage={selectedImage}
+            textContent={textContent}
+            textStyle={textStyle}
+            overlaySettings={overlaySettings}
+            textPosition={textPosition}
+            onTextPositionChange={setTextPosition}
+          />
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
+      </div>
+
+      {/* Right Section - Controls */}
+      <div className="w-96 p-6 space-y-6">
+        {/* Asset Panel */}
+        <AssetPanel
+          selectedImage={selectedImage}
+          onImageSelect={setSelectedImage}
+        />
+
+        {/* Text Input */}
+        <div className="bg-white rounded-lg shadow-lg p-4">
+          <h3 className="text-lg font-semibold mb-3">Text Content</h3>
+          <textarea
+            value={textContent}
+            onChange={(e) => setTextContent(e.target.value)}
+            placeholder="Enter your text here..."
+            className="w-full h-24 p-3 border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+        </div>
+
+        {/* Text Controls */}
+        <TextControls
+          textStyle={textStyle}
+          onTextStyleChange={setTextStyle}
+          overlaySettings={overlaySettings}
+          onOverlaySettingsChange={setOverlaySettings}
+        />
+      </div>
     </div>
   );
 }

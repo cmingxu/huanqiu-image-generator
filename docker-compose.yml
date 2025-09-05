@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  nextjs-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3300:3300"
+    volumes:
+      - ./public/assets:/app/public/assets
+    environment:
+      - NODE_ENV=production
+      - PORT=3300
+    restart: unless-stopped
+    container_name: huanqiu-image-generator
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  assets:
+    driver: local
