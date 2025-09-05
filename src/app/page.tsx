@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useSearchParams } from 'next/navigation';
 import CanvasEditor from '../components/CanvasEditor';
 import AssetPanel from '../components/AssetPanel';
 import TextControls from '../components/TextControls';
@@ -59,84 +60,80 @@ export default function Home() {
   });
   const [textPosition, setTextPosition] = useState<TextPosition>({ x: 50, y: 50 });
 
-  // const searchParams = useSearchParams(); // Currently unused
-
+  const searchParams = useSearchParams();
   // Function to parse URL parameters and update state
   const parseUrlParams = useCallback(() => {
-    const params = new URLSearchParams(window.location.search);
     let hasParams = false;
 
     // Parse selected image
-    const image = params.get('image');
+    const image = searchParams.get('image');
     if (image) {
       setSelectedImage(decodeURIComponent(image));
       hasParams = true;
     }
 
     // Parse text content
-    const text = params.get('text');
+    const text = searchParams.get('text');
     if (text) {
       setTextContent(decodeURIComponent(text));
       hasParams = true;
     }
 
     // Parse text style parameters
-    const newTextStyle = { ...textStyle };
     const textStyleParams = [
       'fontFamily', 'fontSize', 'fontWeight', 'color', 'backgroundColor',
       'textShadow', 'border', 'borderRadius', 'borderWidth', 'borderStyle',
       'padding', 'scaleX', 'scaleY', 'skewX', 'skewY'
     ];
 
+    const styleUpdates: Partial<TextStyle> = {};
+    let hasStyleParams = false;
+
     textStyleParams.forEach(param => {
-      const value = params.get(param);
+      const value = searchParams.get(param);
       if (value !== null) {
         if (param === 'fontSize' || param === 'borderRadius' || param === 'borderWidth' || param === 'padding') {
-          (newTextStyle as Record<string, unknown>)[param] = parseInt(value);
+          (styleUpdates as Record<string, unknown>)[param] = parseInt(value);
         } else if (param === 'scaleX' || param === 'scaleY' || param === 'skewX' || param === 'skewY') {
-          (newTextStyle as Record<string, unknown>)[param] = parseFloat(value);
+          (styleUpdates as Record<string, unknown>)[param] = parseFloat(value);
         } else {
-          (newTextStyle as Record<string, unknown>)[param] = decodeURIComponent(value);
+          (styleUpdates as Record<string, unknown>)[param] = decodeURIComponent(value);
         }
+        hasStyleParams = true;
         hasParams = true;
       }
     });
 
-    if (hasParams) {
-      setTextStyle(newTextStyle);
+    if (hasStyleParams) {
+      setTextStyle(prevStyle => ({ ...prevStyle, ...styleUpdates }));
     }
 
     // Parse overlay settings
-    const newOverlaySettings = { ...overlaySettings };
-    const opacity = params.get('opacity');
-    const overlayColor = params.get('overlayColor');
-    
-    if (opacity !== null) {
-      newOverlaySettings.opacity = parseFloat(opacity);
-      hasParams = true;
-    }
-    if (overlayColor !== null) {
-      newOverlaySettings.color = decodeURIComponent(overlayColor);
-      hasParams = true;
-    }
+    const opacity = searchParams.get('opacity');
+    const overlayColor = searchParams.get('overlayColor');
     
     if (opacity !== null || overlayColor !== null) {
-      setOverlaySettings(newOverlaySettings);
+      setOverlaySettings(prevSettings => ({
+        ...prevSettings,
+        ...(opacity !== null && { opacity: parseFloat(opacity) }),
+        ...(overlayColor !== null && { color: decodeURIComponent(overlayColor) })
+      }));
+      hasParams = true;
     }
 
     // Parse text position
-    const x = params.get('x');
-    const y = params.get('y');
+    const x = searchParams.get('x');
+    const y = searchParams.get('y');
     if (x !== null || y !== null) {
-      setTextPosition({
-        x: x !== null ? parseInt(x) : textPosition.x,
-        y: y !== null ? parseInt(y) : textPosition.y
-      });
+      setTextPosition(prevPosition => ({
+        x: x !== null ? parseInt(x) : prevPosition.x,
+        y: y !== null ? parseInt(y) : prevPosition.y
+      }));
       hasParams = true;
     }
 
     return hasParams;
-  }, [textStyle, overlaySettings, textPosition]);
+  }, [searchParams]);
 
 
   // Effect to parse URL parameters on component mount
