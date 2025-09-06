@@ -1,0 +1,25 @@
+{
+  "weather_api": {
+    "api_key": "test_weather_key",
+    "base_url": "https://api.openweathermap.org/data/2.5",
+    "city": "Beijing"
+  },
+  "traffic_api": {
+    "api_key": "test_traffic_key",
+    "base_url": "https://api.example.com",
+    "city": "Beijing"
+  },
+  "deepseek_llm": {
+    "api_key": "sk-2e8b91333d384ba29582bea1367cfddd",
+    "base_url": "https://api.deepseek.com",
+    "model": "deepseek-chat"
+  },
+  "xiaohongshu": {
+    "server_url": "http://localhost:18062",
+    "headless": false
+  },
+  "settings": {
+    "post_interval": "24h",
+    "log_level": "info"
+  }
+}
