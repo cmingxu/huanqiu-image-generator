@@ -51,27 +51,18 @@ func (bs *BrowserService) TakeScreenshot(ctx context.Context, req *ScreenshotReq
 		chromedp.Flag("allow-running-insecure-content", true),
 	)
 
-	println("11111111111")
-
 	allocCtx, cancel := chromedp.NewExecAllocator(ctx, opts...)
 	defer cancel()
 
 	browserCtx, cancel := chromedp.NewContext(allocCtx, chromedp.WithLogf(logrus.Printf))
 	defer cancel()
 
-	println("2222222222")
 	// Set timeout to 60 seconds
 	browserCtx, cancel = context.WithTimeout(browserCtx, 60*time.Second)
 	defer cancel()
 
 	var buf []byte
 
-	println("3333333333")
-	println("Buffer length:", len(buf))
-	println("Output path:", req.OutputPath)
-	println("Selector:", req.Selector)
-	println("Wait time:", req.WaitTime)
-	println("URL:", req.URL)
 	// Run browser tasks
 	err := chromedp.Run(browserCtx,
 		// Navigate to the URL

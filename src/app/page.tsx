@@ -35,6 +35,11 @@ export interface TextPosition {
 }
 
 export default function Home() {
+  // Set page title
+  useEffect(() => {
+    document.title = '生成器';
+  }, []);
+
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [textContent, setTextContent] = useState('8 月 3 日入园人数: <span style="color: #ff0000; font-weight: bold;">19999</span><br/>天气晴朗适合游玩');
   const [textStyle, setTextStyle] = useState<TextStyle>({

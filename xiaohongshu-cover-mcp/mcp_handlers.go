@@ -10,34 +10,38 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+const defaultText = `
+8 月 3 日入园人数: <span style="color: #ff0000; font-weight: bold;">19999</span><br/>天气晴朗适合游玩
+`
+
 // handleGenerateXiaohongshuCover handles the generate_xiaohongshu_cover tool call
 func (s *MCPServer) handleGenerateXiaohongshuCover(ctx context.Context, args map[string]interface{}) *MCPToolResult {
 	logrus.Info("MCP: Generating Xiaohongshu cover")
 
 	// Set default values
 	defaults := map[string]interface{}{
-		"baseUrl":       "http://localhost:3000",
+		"baseUrl":         "http://localhost:3000",
 		"selector":        "#exportable",
-		"image":           "/assets/sample1.jpg",
-		"text":            "Sample Text",
+		"image":           "/assets/6.jpg",
+		"text":            defaultText,
 		"output_path":     "/tmp/xiaohongshu_cover.png",
 		"fontFamily":      "Arial",
 		"fontSize":        48,
 		"fontWeight":      "bold",
-		"color":           "#ffffff",
-		"backgroundColor": "#000000",
+		"color":           "#0e0d0c",
+		"backgroundColor": "#f4f750",
 		"textShadow":      "2px 2px 4px #000000",
 		"border":          "1px solid #000000",
-		"borderRadius":    0,
-		"borderWidth":     1,
-		"borderStyle":     "solid",
+		"borderRadius":    32,
+		"borderWidth":     3,
+		"borderStyle":     "dashed",
 		"padding":         20,
 		"scaleX":          1.0,
 		"scaleY":          1.0,
 		"skewX":           0.0,
 		"skewY":           0.0,
 		"opacity":         0.8,
-		"overlayColor":    "#000000",
+		"overlayColor":    "#443c3c",
 		"x":               50,
 		"y":               50,
 	}
@@ -61,7 +65,7 @@ func (s *MCPServer) handleGenerateXiaohongshuCover(ctx context.Context, args map
 		if key == "output_path" {
 			continue // Skip output_path as it's not a URL parameter
 		}
-		
+
 		switch v := value.(type) {
 		case string:
 			urlParams.Set(key, v)
@@ -120,3 +124,4 @@ func (s *MCPServer) handleGenerateXiaohongshuCover(ctx context.Context, args map
 		}},
 	}
 }
+
