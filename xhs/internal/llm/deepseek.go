@@ -240,7 +240,7 @@ func (s *Service) buildPrompt(req *ContentRequest) string {
 4. 整体风格要符合小红书用户喜好
 5. 内容要积极正面，传递正能量
 6. cover_text必须包含当前日期和入园人数以及“环球影城“，格式如："X月X日北京环球影城入园人数: <span style=\"color: #ff0000; font-weight: bold;\">XXXXX</span><br/>天气描述"，总长度不超过30个字符（不含HTML标签）
-7. 标题字数不能超过 30 个中文字符（包含 emoji）`
+7. 标题字数不能超过 20 个中文字符（包含 emoji）`
 
 	return prompt
 }

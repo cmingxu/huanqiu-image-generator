@@ -6,7 +6,7 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "3300:3300"
+      - "3301:3300"
     volumes:
       - ./public/assets:/app/public/assets
     environment:

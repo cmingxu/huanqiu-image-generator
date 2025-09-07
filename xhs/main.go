@@ -4,12 +4,15 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 
 	"xiaohongshu-unified/internal/config"
 	"xiaohongshu-unified/internal/orchestrator"
+	"xiaohongshu-unified/internal/scheduler"
 )
 
 func main() {
@@ -24,10 +27,13 @@ func main() {
 	port := flag.String("port", ":18062", "Server port")
 	coverBaseURL := flag.String("cover-base-url", "http://localhost:3000", "Base URL for cover generation service")
 	coverDir := flag.String("cover-dir", "/Users/kx/Desktop", "Output directory for cover images")
+	schedulerMode := flag.Bool("scheduler", false, "Run in scheduler mode (daily 8pm Beijing time)")
+	runOnce := flag.Bool("run-once", false, "Run workflow once and exit")
 	flag.Parse()
 
 	logrus.Infof("Starting Xiaohongshu Unified Server...")
 	logrus.Infof("Headless mode: %v", *headless)
+	logrus.Infof("Scheduler mode: %v", *schedulerMode)
 	logrus.Infof("Port: %s", *port)
 
 	// Load configuration for content generation
@@ -66,8 +72,47 @@ func main() {
 	var orch *orchestrator.Orchestrator
 	if cfg != nil {
 		orch = orchestrator.New(cfg)
+		logrus.Info("Content generation orchestrator initialized")
+	} else {
+		logrus.Warn("Content generation orchestrator not available (config not loaded)")
 	}
 
+	// Handle scheduler mode or run-once mode
+	if *schedulerMode || *runOnce {
+		if orch == nil {
+			logrus.Fatal("Cannot run scheduler mode without valid configuration")
+		}
+
+		schedulerSvc := scheduler.New(orch)
+
+		if *runOnce {
+			logrus.Info("Running workflow once...")
+			if err := schedulerSvc.RunOnce(); err != nil {
+				logrus.Fatalf("Workflow execution failed: %v", err)
+			}
+			logrus.Info("Workflow completed successfully")
+			return
+		}
+
+		// Setup graceful shutdown for scheduler mode
+		sigChan := make(chan os.Signal, 1)
+		signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
+
+		// Start scheduler in a goroutine
+		go func() {
+			if err := schedulerSvc.Start(); err != nil {
+				logrus.Errorf("Scheduler error: %v", err)
+			}
+		}()
+
+		// Wait for shutdown signal
+		<-sigChan
+		logrus.Info("Shutdown signal received")
+		schedulerSvc.Stop()
+		return
+	}
+
+	// Regular API server mode
 	// 创建统一服务器，包含MCP和内容生成API
 	unifiedServer := NewUnifiedServer(mcpServer, orch)
 

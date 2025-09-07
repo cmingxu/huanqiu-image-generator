@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import CanvasEditor from '../components/CanvasEditor';
 import AssetPanel from '../components/AssetPanel';
@@ -34,12 +34,7 @@ export interface TextPosition {
   y: number;
 }
 
-export default function Home() {
-  // Set page title
-  useEffect(() => {
-    document.title = '生成器';
-  }, []);
-
+function HomeContent() {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [textContent, setTextContent] = useState('8 月 3 日入园人数: <span style="color: #ff0000; font-weight: bold;">19999</span><br/>天气晴朗适合游玩');
   const [textStyle, setTextStyle] = useState<TextStyle>({
@@ -194,5 +189,18 @@ export default function Home() {
         />
       </div>
     </div>
+  );
+}
+
+export default function Home() {
+  // Set page title
+  useEffect(() => {
+    document.title = '生成器';
+  }, []);
+
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-gray-50 flex items-center justify-center"><div className="text-lg">Loading...</div></div>}>
+      <HomeContent />
+    </Suspense>
   );
 }
