@@ -4,7 +4,9 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"math/rand"
 	"net/http"
+	"path/filepath"
 	"time"
 
 	"xiaohongshu-unified/internal/config"
@@ -70,6 +72,55 @@ type MCPError struct {
 	Data    interface{} `json:"data,omitempty"`
 }
 
+// AssetsResponse represents the response from the assets API
+type AssetsResponse struct {
+	Images []string `json:"images"`
+}
+
+// fetchAvailableAssets fetches the list of available assets from the cover service
+func (c *Client) fetchAvailableAssets() ([]string, error) {
+	url := c.cfg.MCP.BaseURL + "/api/assets"
+	resp, err := c.httpClient.Get(url)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch assets: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("failed to fetch assets: status %d", resp.StatusCode)
+	}
+
+	var assetsResp AssetsResponse
+	if err := json.NewDecoder(resp.Body).Decode(&assetsResp); err != nil {
+		return nil, fmt.Errorf("failed to decode assets response: %w", err)
+	}
+
+	return assetsResp.Images, nil
+}
+
+// selectRandomAsset selects a random asset from the available list
+func (c *Client) selectRandomAsset() (string, error) {
+	assets, err := c.fetchAvailableAssets()
+	if err != nil {
+		return "", err
+	}
+
+	if len(assets) == 0 {
+		return "", fmt.Errorf("no assets available")
+	}
+
+	// Select a random asset
+	index := rand.Intn(len(assets))
+	return assets[index], nil
+}
+
+// generateOutputPath generates a timestamped output path in the configured directory
+func (c *Client) generateOutputPath() string {
+	timestamp := time.Now().Format("20060102_150405")
+	filename := fmt.Sprintf("cover_%s.jpeg", timestamp)
+	return filepath.Join(c.cfg.MCP.OutDir, filename)
+}
+
 // GenerateImage generates an image using the MCP server
 func (c *Client) GenerateImage(req *ImageRequest) (*ImageResponse, error) {
 	// For now, delegate to GenerateXiaohongshuCover with the prompt
@@ -84,6 +135,15 @@ func (c *Client) GenerateXiaohongshuCover(prompt, coverText string) (*ImageRespo
 		coverText = "Sample Text"
 	}
 
+	// Select a random asset image
+	randomAsset, err := c.selectRandomAsset()
+	if err != nil {
+		return nil, fmt.Errorf("failed to select random asset: %w", err)
+	}
+
+	// Generate timestamped output path
+	outputPath := c.generateOutputPath()
+
 	// Prepare MCP request using tools/call method with proper parameters
 	mcpReq := MCPRequest{
 		JSONRPC: "2.0",
@@ -91,11 +151,11 @@ func (c *Client) GenerateXiaohongshuCover(prompt, coverText string) (*ImageRespo
 		Params: map[string]interface{}{
 			"name": "generate_xiaohongshu_cover",
 			"arguments": map[string]interface{}{
-				"baseUrl":         "http://localhost:3000",
+				"baseUrl":         c.cfg.MCP.BaseURL,
 				"selector":        "#exportable",
-				"image":           "/assets/6.jpg",
+				"image":           randomAsset,
 				"text":            coverText,
-				"output_path":     "/Users/kx/Desktop/xiaohongshu_cover.png",
+				"output_path":     outputPath,
 				"headless":        c.cfg.MCP.Headless,
 				"fontFamily":      "Comic Sans MS",
 				"fontSize":        48,
@@ -158,8 +218,8 @@ func (c *Client) GenerateXiaohongshuCover(prompt, coverText string) (*ImageRespo
 
 	// Create ImageResponse with the generated image path
 	imageResp := &ImageResponse{
-		ImagePath:   "/Users/kx/Desktop/xiaohongshu_cover.png",
-		ImageURL:    "/Users/kx/Desktop/xiaohongshu_cover.png",
+		ImagePath:   outputPath,
+		ImageURL:    outputPath,
 		Prompt:      coverText,
 		GeneratedAt: time.Now(),
 	}

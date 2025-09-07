@@ -21,8 +21,8 @@ type ContentRequest struct {
 	Lunar   *lunar.LunarInfo     `json:"lunar"`
 	Traffic *traffic.TrafficInfo `json:"traffic"`
 	Visitor *visitor.VisitorInfo `json:"visitor"`
-	Weibo   string               `json:"weibo,omitempty"`   // Weibo content for reference
-	Theme   string               `json:"theme,omitempty"`   // Optional theme for the post
+	Weibo   string               `json:"weibo,omitempty"` // Weibo content for reference
+	Theme   string               `json:"theme,omitempty"` // Optional theme for the post
 }
 
 // GeneratedContent represents the generated content
@@ -227,10 +227,10 @@ func (s *Service) buildPrompt(req *ContentRequest) string {
 
 	prompt += `请按照以下JSON格式返回内容：
 {
-  "title": "吸引人的标题（15-20字，包含emoji）",
+  "title": "吸引人的标题（15-20字，包含emoji, 严格控制 20 个中文字符以内）",
   "content": "正文内容（200-300字，分段，包含emoji，贴近生活，有实用价值）",
   "tags": ["相关标签1", "相关标签2", "相关标签3", "相关标签4", "相关标签5"],
-  "cover_text": "封面文本（HTML格式，必须包含日期和入园人数，限制15字符内）"
+  "cover_text": "封面文本（HTML格式，必须包含日期和入园人数，以及关键词“环球影城”, 限制30字符内）"
 }
 
 要求：
@@ -239,8 +239,8 @@ func (s *Service) buildPrompt(req *ContentRequest) string {
 3. 标签要准确反映内容主题
 4. 整体风格要符合小红书用户喜好
 5. 内容要积极正面，传递正能量
-6. cover_text必须包含当前日期和入园人数，格式如："X月X日北京环球影城入园人数: <span style=\"color: #ff0000; font-weight: bold;\">XXXXX</span><br/>天气描述"，总长度不超过30个字符（不含HTML标签）
-7. 标题字数不能超过 20 个中文字符（包含 emoji）`
+6. cover_text必须包含当前日期和入园人数以及“环球影城“，格式如："X月X日北京环球影城入园人数: <span style=\"color: #ff0000; font-weight: bold;\">XXXXX</span><br/>天气描述"，总长度不超过30个字符（不含HTML标签）
+7. 标题字数不能超过 30 个中文字符（包含 emoji）`
 
 	return prompt
 }
@@ -292,7 +292,7 @@ func (s *Service) parseGeneratedContent(text string) (*GeneratedContent, error) 
 func (s *Service) createFallbackContent(text string) *GeneratedContent {
 	currentDate := time.Now()
 	defaultCoverText := fmt.Sprintf("%d月%d日入园人数: <span style=\"color: #ff0000; font-weight: bold;\">19999</span><br/>天气晴适合游玩", currentDate.Month(), currentDate.Day())
-	
+
 	return &GeneratedContent{
 		Title:     "今日生活分享 ✨",
 		Content:   text,
@@ -317,3 +317,4 @@ func (g *GeneratedContent) GetFormattedContent() string {
 
 	return result
 }
+

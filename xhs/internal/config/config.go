@@ -10,9 +10,9 @@ import (
 type Config struct {
 	// Weather API configuration
 	WeatherAPI struct {
-		APIKey   string `json:"api_key"`
-		BaseURL  string `json:"base_url"`
-		City     string `json:"city"`
+		APIKey  string `json:"api_key"`
+		BaseURL string `json:"base_url"`
+		City    string `json:"city"`
 	} `json:"weather_api"`
 
 	// Traffic API configuration
@@ -33,6 +33,8 @@ type Config struct {
 	MCP struct {
 		ServerURL string `json:"server_url"`
 		Headless  bool   `json:"headless"`
+		BaseURL   string `json:"base_url"`
+		OutDir    string `json:"out_dir"`
 	} `json:"mcp"`
 
 	// Xiaohongshu configuration
@@ -157,13 +159,19 @@ func setDefaults(cfg *Config) {
 	}
 
 	if cfg.MCP.ServerURL == "" {
-		cfg.MCP.ServerURL = "http://localhost:18061"
+		cfg.MCP.ServerURL = "http://localhost:18062"
+	}
+	if cfg.MCP.BaseURL == "" {
+		cfg.MCP.BaseURL = "http://localhost:3000"
+	}
+	if cfg.MCP.OutDir == "" {
+		cfg.MCP.OutDir = "/Users/kx/Desktop"
 	}
 	// Default headless to false for MCP
 	cfg.MCP.Headless = false
 
 	if cfg.Xiaohongshu.ServerURL == "" {
-		cfg.Xiaohongshu.ServerURL = "http://localhost:18060"
+		cfg.Xiaohongshu.ServerURL = "http://localhost:18062"
 	}
 	// Default headless to false for Xiaohongshu
 	cfg.Xiaohongshu.Headless = false
@@ -197,3 +205,4 @@ func validate(cfg *Config) error {
 	}
 	return nil
 }
+

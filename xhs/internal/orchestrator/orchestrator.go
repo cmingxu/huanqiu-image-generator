@@ -25,7 +25,7 @@ type Orchestrator struct {
 	visitorSvc    *visitor.Service
 	weiboSvc      *weibo.Service
 	llmSvc        *llm.Service
-	mcpClient     *covergen.Client
+	coverMCPClient     *covergen.Client
 	xhsClient     *xhs.Client
 }
 
@@ -39,7 +39,7 @@ func New(cfg *config.Config) *Orchestrator {
 		visitorSvc: visitor.NewService(cfg),
 		weiboSvc:   weibo.NewService(cfg.Weibo.UID, cfg.Weibo.Cookies, cfg.Weibo.Token),
 		llmSvc:     llm.NewService(cfg),
-		mcpClient:  covergen.NewClient(cfg),
+		coverMCPClient:  covergen.NewClient(cfg),
 		xhsClient:  xhs.NewClient(cfg),
 	}
 }
@@ -155,7 +155,7 @@ func (o *Orchestrator) Run() error {
 	log.Println("🎨 Generating cover image...")
 	// Use a default image prompt and the cover_text from LLM response
 	defaultImagePrompt := "cozy daily life scene, warm lighting, lifestyle photography, Beijing Universal Studios theme park"
-	imageResp, err := o.mcpClient.GenerateXiaohongshuCover(
+	imageResp, err := o.coverMCPClient.GenerateXiaohongshuCover(
 		defaultImagePrompt,
 		generatedContent.CoverText,
 	)
@@ -208,7 +208,7 @@ func (o *Orchestrator) testConnections() error {
 	log.Println("🔍 Testing service connections...")
 
 	// Test MCP server connection
-	if err := o.mcpClient.TestConnection(); err != nil {
+	if err := o.coverMCPClient.TestConnection(); err != nil {
 		return fmt.Errorf("MCP server connection failed: %w", err)
 	}
 	log.Println("✅ MCP server connection OK")
@@ -262,7 +262,7 @@ func (o *Orchestrator) GetServiceStatus() map[string]string {
 	status := make(map[string]string)
 
 	// Test MCP server
-	if err := o.mcpClient.TestConnection(); err != nil {
+	if err := o.coverMCPClient.TestConnection(); err != nil {
 		status["mcp_server"] = fmt.Sprintf("❌ Error: %v", err)
 	} else {
 		status["mcp_server"] = "✅ OK"

@@ -15,11 +15,13 @@
     "model": "deepseek-chat"
   },
   "mcp": {
-    "server_url": "http://localhost:18061",
-    "headless": false
+    "server_url": "http://localhost:18062",
+    "headless": false,
+    "base_url": "http://localhost:3000",
+    "out_dir": "/Users/kx/Desktop"
   },
   "xiaohongshu": {
-    "server_url": "http://localhost:18060",
+    "server_url": "http://localhost:18062",
     "headless": false
   },
   "settings": {

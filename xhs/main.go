@@ -21,7 +21,9 @@ func main() {
 
 	// 解析命令行参数
 	headless := flag.Bool("headless", true, "Run browser in headless mode")
-	port := flag.String("port", ":18060", "Server port")
+	port := flag.String("port", ":18062", "Server port")
+	coverBaseURL := flag.String("cover-base-url", "http://localhost:3000", "Base URL for cover generation service")
+	coverDir := flag.String("cover-dir", "/Users/kx/Desktop", "Output directory for cover images")
 	flag.Parse()
 
 	logrus.Infof("Starting Xiaohongshu Unified Server...")
@@ -33,6 +35,14 @@ func main() {
 	if err != nil {
 		logrus.Warnf("Failed to load content generation config: %v", err)
 		// Continue without content generation features
+	}
+
+	// Override config with command-line flags if provided
+	if cfg != nil {
+		cfg.MCP.BaseURL = *coverBaseURL
+		cfg.MCP.OutDir = *coverDir
+		logrus.Infof("Cover Base URL: %s", cfg.MCP.BaseURL)
+		logrus.Infof("Cover Output Directory: %s", cfg.MCP.OutDir)
 	}
 
 	// 初始化浏览器服务
